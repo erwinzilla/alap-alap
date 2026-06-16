@@ -1,13 +1,16 @@
 import express from "express";
 import { getAuthUrl, handleCallback } from "./lib/services/auth.ts";
 import { getProductBySKU, getProductDetail } from "./lib/services/products.ts";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 async function startServer() {
   try {
     console.log("🚀 Starting server...");
 
     const app = express();
-    const PORT = 3000;
+    const PORT = parseInt(process.env.APP_PORT ?? '3001');
 
     console.log("📝 Setting up routes...");
 
@@ -42,7 +45,7 @@ async function startServer() {
 
     app.get("/auth/shopee", (req, res) => {
       console.log("🔑 Route /auth/shopee dipanggil");
-      const redirectUri = `https://shorts-divisible-spiffy.ngrok-free.dev/auth/shopee/callback`;
+      const redirectUri = `${process.env.APP_REDIRECT}/auth/shopee/callback`;
       const authUrl = getAuthUrl(redirectUri);
       res.redirect(authUrl);
     });
