@@ -2,6 +2,8 @@ import express from "express";
 import { getAuthUrl, handleCallback } from "./lib/services/auth.ts";
 import { getProductBySKU, getProductDetail } from "./lib/services/products.ts";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -10,7 +12,17 @@ async function startServer() {
     console.log("🚀 Starting server...");
 
     const app = express();
-    const PORT = parseInt(process.env.APP_PORT ?? '3001');
+    const PORT = parseInt(process.env.APP_PORT ?? "3001");
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    // === Middleware ===
+    // 1. Serve static files dari folder 'public'
+    // app.use(express.static(path.join(__dirname, "public")));
+
+    // 2. Untuk parsing JSON (jika ada POST)
+    // app.use(express.json());
 
     console.log("📝 Setting up routes...");
 
@@ -36,11 +48,7 @@ async function startServer() {
     }
 
     app.get("/", (req, res) => {
-      res.send(`
-        <h1>Shopee SDK Server</h1>
-        <p>Server berjalan dengan baik!</p>
-        <a href="/auth/shopee">Mulai Autentikasi Shopee</a>
-      `);
+      res.sendFile(path.join(__dirname, "public", "index.html"));
     });
 
     app.get("/auth/shopee", (req, res) => {
