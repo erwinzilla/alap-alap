@@ -2,6 +2,8 @@ import { getAuthenticatedSDK } from './auth';
 
 export async function getShippingParameter(orderSn: string) {
   const sdk = getAuthenticatedSDK();
+
+  if (sdk == null) return null;
   
   const shipping = await sdk.logistics.getShippingParameter({
     order_sn: orderSn,
@@ -13,7 +15,8 @@ export async function getShippingParameter(orderSn: string) {
 
 export async function createShippingOrder(orderSn: string, logisticId: number) {
   const sdk = getAuthenticatedSDK();
-  
+  if (sdk == null) return null;
+
   const result = await sdk.logistics.shipOrder({
     order_sn: orderSn,
     logistic_id: logisticId,

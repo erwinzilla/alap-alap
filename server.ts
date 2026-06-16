@@ -1,5 +1,5 @@
 import express from "express";
-import { getAuthUrl, handleCallback } from "./lib/services/auth.ts";
+import { getAuthUrl, handleCallback, getAuthStatus } from "./lib/services/auth.ts";
 import { getProductBySKU, getProductDetail } from "./lib/services/products.ts";
 import dotenv from "dotenv";
 import path from "path";
@@ -49,6 +49,11 @@ async function startServer() {
 
     app.get("/", (req, res) => {
       res.sendFile(path.join(__dirname, "public", "index.html"));
+    });
+
+    app.get("/api/auth-status", (req, res) => {
+      const status = getAuthStatus();
+      res.json({ success: true, ...status });
     });
 
     app.get("/auth/shopee", (req, res) => {
