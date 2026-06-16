@@ -1,6 +1,10 @@
 import express from "express";
-import { getAuthUrl, handleCallback, getAuthStatus } from "./lib/services/auth.ts";
-import { getProductBySKU, getProductDetail } from "./lib/services/products.ts";
+import {
+  getAuthUrl,
+  handleCallback,
+  getAuthStatus,
+} from "./lib/services/auth.ts";
+import { getProductBySKU, getProductDetail, getProductList } from "./lib/services/products.ts";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -73,10 +77,28 @@ async function startServer() {
 
       try {
         await handleCallback(code as string);
-        res.send("<h1>✅ Autentikasi Berhasil!</h1>");
+        res.send(`
+      <h1>✅ Autentikasi Berhasil!</h1>
+      <p>Token telah disimpan. Anda sekarang dapat menggunakan API Shopee.</p>
+      <a href="/">Kembali ke Dashboard</a>
+    `);
       } catch (error) {
         console.error("Error:", error);
         res.status(500).send("Autentikasi gagal");
+      }
+    });
+
+    app.get("/api/products", async (req, res) => {
+      try {
+        const products = await getProductList();
+
+        res.json({
+          status: "success",
+          message: "sukses mengambil data produk",
+          data: products,
+        });
+      } catch (error: any) {
+        handleError(res, error);
       }
     });
 
