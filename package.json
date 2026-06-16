@@ -1,0 +1,34 @@
+{
+  "name": "alap-alap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.ts",
+    "server": "node server.ts",
+    "auth": "node server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erwinzilla/alap-alap.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/erwinzilla/alap-alap/issues"
+  },
+  "homepage": "https://github.com/erwinzilla/alap-alap#readme",
+  "dependencies": {
+    "@congminh1254/shopee-sdk": "^1.11.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
