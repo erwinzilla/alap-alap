@@ -149,10 +149,8 @@
       </div>
 
       <!-- === TABEL PRODUK === -->
-      <div
-        class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 fade-in"
-      >
-        <div class="flex items-center justify-between mb-4">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 fade-in">
+        <div class="flex items-center justify-between mb-4 px-5 pt-5">
           <h2 class="text-lg font-semibold text-gray-800">
             <i class="fas fa-list-ul text-orange-500 mr-2"></i> Produk Terbaru
           </h2>
@@ -241,10 +239,11 @@
 
       // --- Update Dashboard ---
       async function updateDashboard() {
-        const products = await fetchAPI("/api/products");
-        if (products && products.success) {
-          const items = products.data?.items || [];
-          const total = products.data?.total_count || 0;
+        const res = await fetchAPI("/api/products");
+        console.log(res);
+        if (res.status == "success" && res.data.length > 0) {
+          const items = res.data || [];
+          const total = res.data.length || 0;
           document.getElementById("totalProducts").textContent = total;
 
           // Render tabel produk
@@ -254,23 +253,26 @@
           } else {
             tbody.innerHTML = items
               .slice(0, 5)
-              .map(
-                (item) => `
+              .map((item) => {
+                const itemStock =
+                  item.stock_info_v2?.summary_info.total_available_stock ?? 0;
+
+                return `
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-4 py-3 text-sm font-medium text-gray-800">${item.item_name || "—"}</td>
                             <td class="px-4 py-3 text-sm text-gray-500">${item.item_sku || "—"}</td>
                             <td class="px-4 py-3 text-sm">
-                                <span class="${item.stock <= 5 ? "text-red-600 font-semibold" : "text-gray-700"}">${item.stock ?? "—"}</span>
+                                <span class="${itemStock <= 5 ? "text-red-600 font-semibold" : "text-gray-700"}">${itemStock ?? "—"}</span>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-700">Rp ${(item.price || 0).toLocaleString()}</td>
                             <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 text-xs rounded-full ${item.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}">
-                                    ${item.stock > 0 ? "Aktif" : "Habis"}
+                                <span class="px-2 py-1 text-xs rounded-full ${itemStock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}">
+                                    ${itemStock > 0 ? "Aktif" : "Habis"}
                                 </span>
                             </td>
                         </tr>
-                    `,
-              )
+                    `;
+              })
               .join("");
           }
 
@@ -288,7 +290,7 @@
           if (isAuth) {
             icon.className = "fas fa-circle text-2xl text-green-400";
             status.textContent = "✅ Terautentikasi";
-            status.className = "text-3xl font-bold text-green-600";
+            status.className = "text-2xl font-bold text-green-600";
           } else {
             icon.className = "fas fa-circle text-2xl text-red-400";
             status.textContent = "❌ Belum Login";

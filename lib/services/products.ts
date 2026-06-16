@@ -13,7 +13,6 @@ interface NewSearchItemResponse extends SearchItemResponse {
 export async function getProductList() {
   const sdk = getAuthenticatedSDK();
 
-  if (sdk == null) return null;
   // Mendapatkan daftar produk dengan pagination
   const products = await sdk.product.getItemList({
     offset: 0,
@@ -30,7 +29,6 @@ export async function getProductList() {
 export async function getProductBySKU(sku: string) {
   const sdk = getAuthenticatedSDK();
 
-  if (sdk == null) return null;
   const res = await sdk.product.searchItem({
     page_size: 10,
     item_sku: sku,
@@ -53,10 +51,19 @@ export async function getProductBySKU(sku: string) {
   };
 }
 
+export async function getProductsDetail(ids: number[]) {
+  const sdk = getAuthenticatedSDK();
+
+  const product = await sdk.product.getItemBaseInfo({
+    item_id_list: ids,
+  });
+
+  return product.response?.item_list;
+}
+
 export async function getProductDetail(id: number) {
   const sdk = getAuthenticatedSDK();
 
-  if (sdk == null) return null;
   const product = await sdk.product.getItemBaseInfo({
     item_id_list: [id],
   });

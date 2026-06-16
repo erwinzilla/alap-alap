@@ -4,7 +4,12 @@ import {
   handleCallback,
   getAuthStatus,
 } from "./lib/services/auth.ts";
-import { getProductBySKU, getProductDetail, getProductList } from "./lib/services/products.ts";
+import {
+  getProductBySKU,
+  getProductDetail,
+  getProductList,
+  getProductsDetail,
+} from "./lib/services/products.ts";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -90,7 +95,10 @@ async function startServer() {
 
     app.get("/api/products", async (req, res) => {
       try {
-        const products = await getProductList();
+        const lists = await getProductList();
+        const ids: number[] = lists?.response.item.map((item) => item.item_id);
+
+        const products = await getProductsDetail(ids);
 
         res.json({
           status: "success",

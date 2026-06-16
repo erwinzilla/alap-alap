@@ -1,89 +1,86 @@
-// auth.ts
-import 'dotenv/config';
 import { ShopeeSDK } from "@congminh1254/shopee-sdk";
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { ShopeeRegion } from '@congminh1254/shopee-sdk/schemas';
+import { ShopeeRegion } from "@congminh1254/shopee-sdk/schemas";
+import dotenv from "dotenv";
+import fs from "fs";
 
-// Setup __dirname untuk ES Module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config();
 
-let sdk: ShopeeSDK | null = null;
-let isAuthenticated = false;
+// Inisialisasi SDK dengan kredensial dari environment
+const sdk = new ShopeeSDK({
+  partner_id: parseInt(process.env.SHOPEE_PARTNER_ID!),
+  partner_key: process.env.SHOPEE_PARTNER_KEY!,
+  region: ShopeeRegion.TEST_GLOBAL,
+  shop_id: parseInt(process.env.SHOPEE_SHOP_ID!), // optional
+});
 
-function initSDK() {
-  if (!sdk) {
-    console.log('🔧 Initializing Shopee SDK...');
-    
-    const partnerId = process.env.SHOPEE_PARTNER_ID;
-    const partnerKey = process.env.SHOPEE_PARTNER_KEY;
-    const shopId = process.env.SHOPEE_SHOP_ID;
-    
-    if (!partnerId || !partnerKey) {
-      throw new Error('Missing SHOPEE_PARTNER_ID or SHOPEE_PARTNER_KEY in .env');
-    }
-    
-    sdk = new ShopeeSDK({
-      partner_id: parseInt(partnerId),
-      partner_key: partnerKey,
-      region: ShopeeRegion.TEST_GLOBAL,
-      shop_id: shopId ? parseInt(shopId) : undefined,
-    });
-    
-    console.log('✅ SDK initialized');
-  }
-  return sdk;
-}
-
+// STEP 1: Generate URL untuk redirect seller
 export function getAuthUrl(redirectUri: string): string {
-  const sdk = initSDK();
-  return sdk.getAuthorizationUrl(redirectUri);
+  const authUrl = sdk.getAuthorizationUrl(redirectUri);
+  console.log("🔗 Arahkan seller ke URL berikut untuk memberikan izin:");
+  console.log(authUrl);
+  return authUrl;
 }
 
+// STEP 2: Handle callback dari Shopee dan tukar code dengan access token
 export async function handleCallback(authCode: string): Promise<void> {
-  const sdk = initSDK();
-  console.log('📝 Exchanging code for token...');
+  console.log("📝 Menerima authorization code:", authCode);
+
+  // SDK akan otomatis menukar code dengan token dan menyimpannya
   await sdk.authenticateWithCode(authCode);
-  isAuthenticated = true;
-  console.log('✅ Authentication successful! Token saved.');
+
+  // ✅ FIX: Pastikan shop_id tersedia di token
+  const token = await sdk.getAuthToken();
+  if (
+    token &&
+    !token.shop_id &&
+    token.shop_id_list &&
+    token.shop_id_list?.length > 0
+  ) {
+    console.log("🔧 Fixing token: adding shop_id property...");
+    token.shop_id = token.shop_id_list[0];
+
+    // Simpan kembali token yang sudah diperbaiki
+    const tokenPath = `./.token/${token.shop_id}.json`;
+    const fs = await import("fs/promises");
+    await fs.writeFile(tokenPath, JSON.stringify(token, null, 2));
+    console.log(`✅ Token fixed with shop_id: ${token.shop_id}`);
+  }
+
+  console.log("✅ Autentikasi berhasil! Token tersimpan otomatis.");
 }
 
-export function getAuthenticatedSDK(): ShopeeSDK | null {
-  if (!sdk) {
-    console.warn('⚠️ SDK not initialized yet');
-    return null;
-  }
+// STEP 3: Fungsi untuk mendapatkan instance SDK yang sudah terautentikasi
+export function getAuthenticatedSDK(): ShopeeSDK {
   return sdk;
 }
 
-// ✅ FUNGSI getAuthStatus - Versi yang Aman
 export function getAuthStatus() {
   // Cek apakah ada file token di folder .token
-  const shopId = process.env.SHOPEE_SHOP_ID || 'default';
-  const tokenPath = path.join(__dirname, '.token', `${shopId}.json`);
-  
+  const shopId = process.env.SHOPEE_SHOP_ID || "default";
+  const tokenPath = `./.token/${shopId}.json`;
+
   let hasToken = false;
   let tokenData: any = null;
-  
+
   try {
     if (fs.existsSync(tokenPath)) {
-      const fileContent = fs.readFileSync(tokenPath, 'utf8');
+      const fileContent = fs.readFileSync(tokenPath, "utf8");
       tokenData = JSON.parse(fileContent);
       hasToken = !!tokenData?.access_token;
     }
   } catch (error) {
-    console.warn('⚠️ Could not read token file:', error);
+    console.warn("⚠️ Could not read token file:", error);
     hasToken = false;
   }
-  
+
   return {
     initialized: !!sdk,
-    authenticated: isAuthenticated || hasToken,
+    authenticated: hasToken,
     hasShopId: !!process.env.SHOPEE_SHOP_ID,
     shopId: process.env.SHOPEE_SHOP_ID || null,
     tokenExists: hasToken,
-    tokenExpired: tokenData?.expired_at ? tokenData.expired_at < Date.now() : true,
+    tokenExpired: tokenData?.expired_at
+      ? tokenData.expired_at < Date.now()
+      : true,
   };
 }
