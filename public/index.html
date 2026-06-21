@@ -256,6 +256,7 @@
               .map((item) => {
                 const itemStock =
                   item.stock_info_v2?.summary_info.total_available_stock ?? 0;
+                const itemPrice = item.price_info?.[0].current_price ?? 0;
 
                 return `
                         <tr class="hover:bg-gray-50 transition">
@@ -264,7 +265,7 @@
                             <td class="px-4 py-3 text-sm">
                                 <span class="${itemStock <= 5 ? "text-red-600 font-semibold" : "text-gray-700"}">${itemStock ?? "—"}</span>
                             </td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp ${(item.price || 0).toLocaleString()}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">Rp ${itemPrice.toLocaleString()}</td>
                             <td class="px-4 py-3 text-sm">
                                 <span class="px-2 py-1 text-xs rounded-full ${itemStock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}">
                                     ${itemStock > 0 ? "Aktif" : "Habis"}
